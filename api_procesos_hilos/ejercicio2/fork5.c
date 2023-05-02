@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 		else { //P1
 			P5 = fork();
 			if(P5 == 0){ //P5
-
+				printf("Soy P5");
 			}
 			else { //P1
 
