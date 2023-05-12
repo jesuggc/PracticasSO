@@ -9,34 +9,22 @@ int main(int argc, char **argv)
 	int pid1, pid2;
 	pid1 = fork();
 
-	if (pid1 == 0)
-	{
-		int ppid = getppid();
-		printf("Soy el hijo 1 con pid %d y con padre %d \n", pid1, ppid);
-		// Cambia el ejecutable del proceso hijo 1 a "ls"
-	}
-	else
-	{
-
+	if (pid1 == 0) printf("Soy el hijo 1 con pid %d y con padre %d \n", pid1, getppid());
+	else {
 		wait(NULL);
-		int ppid = getppid();
-		printf("Soy el padre con pid %d y con padre %d \n", pid1, ppid);
+		printf("Soy el padre con pid %d y con padre %d \n", pid1, getppid());
 	}
 
-		pid2 = fork(); // Crea el segundo proceso hijo
-		if (pid2 == 0)
-		{
-			int ppid = getppid();
-		printf("Soy el hijo 2 con pid %d y con padre %d \n", pid2, ppid);
-		execvp(args[0], args);
-		
-		}
-		else
-		{	
-			wait(NULL);
-			int ppid = getppid();
-			printf("Soy el padre con pid %d y con padre %d \n", pid2, ppid);
-		}
+	pid2 = fork();
+	
+	if (pid2 == 0) {
+		printf("Soy el hijo 2 con pid %d y con padre %d \n", pid2, getppid());
+		execvp(args[0], args);	
+	}
+	else {	
+		wait(NULL);
+		printf("Soy el padre con pid %d y con padre %d \n", pid2, getppid());
+	}
 	
 	return 0;
 }
