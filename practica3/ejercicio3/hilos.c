@@ -4,12 +4,9 @@
 //nueva anadir
 #include <pthread.h>
 
- struct estructura
-{
-
+ struct estructura{
 	int thread_num;
 	char priority;
-
 };
 
 void* thread_usuario(void *arg)
@@ -28,21 +25,12 @@ void* thread_usuario(void *arg)
 int main(int argc, char *argv[])
 {
 	pthread_t arrayhilos[10];
-
-	int i = 0;
-
-	for (i = 0; i < 10; i++)
-	{
-		/*
-		struct estructura auxestructura;
-		struct estructura *ptrestructura = &auxestructura;
-		*/
+	for (int i = 0; i < 10; i++) {
 		struct estructura *ptrestructura =malloc(sizeof(struct estructura));
 
 		ptrestructura->thread_num = i;
-
-		if (i % 2 == 0) ptrestructura->priority = 'P';
-		else ptrestructura->priority = 'N';
+		ptrestructura->priority = (i % 2 == 0) ? 'P' : 'N';
+		
 		pthread_create(&arrayhilos[i], NULL, thread_usuario, (void *)ptrestructura);
 	}
 
@@ -58,10 +46,7 @@ int main(int argc, char *argv[])
 
 	*/
 
-	for (i = 0; i < 10; i++)
-	{
+	for (int i = 0; i < 10; i++) pthread_join(arrayhilos[i], NULL);
 
-		pthread_join(arrayhilos[i], NULL);
-	}
 	return 0;
 }

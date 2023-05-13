@@ -4,8 +4,9 @@
 #include <pthread.h>
 
 
-#define CAPACITY 5
+#define CAPACITY 2
 #define VIPSTR(vip) ((vip) ? "  vip  " : "not vip")
+
 
 pthread_cond_t vacio;
 pthread_mutex_t mutex;
@@ -14,8 +15,8 @@ int colaVip = 0;
 int aforoActual = 0;
 int turnoN = 0;
 int turnoVip = 0;
-int ticketN = 0;
-int ticketVip = 0;
+int contadorTicketN = 0;
+int contadorTicketV = 0;
 
 
 typedef struct {
@@ -24,69 +25,55 @@ typedef struct {
 } param;
 
 void enter_normal_client(int id) {
-	printf("ssoy normal :_/");
 
-// 	pthread_mutex_lock(&mutex);
-// 	int Nticket = ticketN;
-// 	ticketN++;
-// 	while ((Nticket != turnoN) && (colaVip < 0) && (aforoActual > CAPACITY))
-// 	{
-// 		pthread_cond_wait(&vacio, &mutex);
-// 	}
-// 	aforoActual++;
-// 	turnoN++;
-// 	printf("Entra normal con id %d \n", id);
+	pthread_mutex_lock(&mutex);
+	int miTurno = contadorTicketN++;
 
-// 	pthread_mutex_unlock(&mutex);
+	while ((miTurno != turnoN) || (colaVip > 0) || (aforoActual >= CAPACITY)) {
+		pthread_cond_wait(&vacio, &mutex);
+	}
+
+	aforoActual++;
+	turnoN++;
+	printf("Entra normal con id %d \n", id);
+	pthread_mutex_unlock(&mutex);
 }
 
 void enter_vip_client(int id) {
-	printf("soy vip");
-
-// 	pthread_mutex_lock(&mutex);
-// 	int VipTicket = ticketVip;
-// 	ticketVip++;
-// 	colaVip++;
-// 	while (VipTicket != turnoVip && aforoActual > CAPACITY)
-// 	{
-// 		pthread_cond_wait(&vacio, &mutex);
-// 	}
-// 	aforoActual++;
-// 	colaVip--;
-// 	turnoVip++;
-// 	printf("Entra vip con id %d \n", id);
-// 	pthread_mutex_unlock(&mutex);
+	pthread_mutex_lock(&mutex);
+	int miTurno = contadorTicketV++;
+	colaVip++;
+	while (miTurno != turnoVip || aforoActual >= CAPACITY) {
+		pthread_cond_wait(&vacio, &mutex);
+	}
+	aforoActual++;
+	colaVip--;
+	turnoVip++;
+	printf("Entra vip con id %d \n", id);
+	pthread_mutex_unlock(&mutex);
 }
 
-// void dance(int id, int isvip)
-// {
-// 	printf("Client %2d (%s) dancing in disco\n", id, VIPSTR(isvip));
-// 	sleep((rand() % 3) + 1);
-// }
+void dance(int id, int isvip) {
+	printf("Client %2d (%s) dancing in disco\n", id, VIPSTR(isvip));
+	sleep((rand() % 3) + 1);
+}
 
-// void disco_exit(int id, int isvip)
-// {
-// 	pthread_mutex_lock(&mutex);
-// 	if (aforoActual == CAPACITY) pthread_cond_broadcast(&vacio);
+void disco_exit(int id, int isvip) {
+	pthread_mutex_lock(&mutex);
+	if (aforoActual == CAPACITY) pthread_cond_broadcast(&vacio);
+	aforoActual--;
+	pthread_mutex_unlock(&mutex);
+}
 
-// 	aforoActual--;
-// 	pthread_mutex_unlock(&mutex);
-// }
-
-void *client(void *arg)
-{
-
-
+void *client(void *arg) {
 	int id = ((param *)arg)->id;
 	int vip = ((param *)arg)->isvip;
-	printf("ID: %d, VIP: %c", id, vip ? 'V' : 'N');
-	printf("\n");
 	
 	if (vip) enter_vip_client(id);
 	else enter_normal_client(id);
 
-	// dance((arg)->id, (arg)->isvip);
-	// disco_exit((arg)->id, (arg)->isvip);
+	dance(id, vip);
+	disco_exit(id,vip);
 }
 
 int main(int argc, char *argv[])
@@ -95,8 +82,8 @@ int main(int argc, char *argv[])
 	FILE *fichero;
 	int size, isvip;
 	int arr[100];
-	// int thread_mutex_init(mutex, null);
-	// pthread_cond_init(&vacio, NULL);
+	pthread_mutex_init(&mutex, NULL);
+	pthread_cond_init(&vacio, NULL);
 	pthread_t *clientes;
 	int prueba = 0;
 	fichero = fopen("ejemplo.txt", "r");
@@ -114,15 +101,13 @@ int main(int argc, char *argv[])
 		fscanf(fichero, "%d", &parametros->isvip);
 
 		pthread_create(&clientes[i], NULL, client, parametros);
-		
-
 	}
 
 	for (int i = 0; i < size; i++)
 	{
 		pthread_join(clientes[i], NULL);
 	}
-	// pthread_mutex_destroy(&mutex);
+	pthread_mutex_destroy(&mutex);
 
 	return 0;
 }
